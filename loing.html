@@ -226,7 +226,10 @@
             } catch (error) {
                 let msg = "No se pudo crear la cuenta.";
                 if(error.code === 'auth/email-already-in-use') msg = "Este email ya está registrado.";
-                mostrarMensaje("Error de Registro", msg, "error");
+                
+                // Registro detallado del error para diagnóstico
+                console.error("Error detallado:", error); 
+                mostrarMensaje("Error de Registro", msg + " Detalle: " + error.message, "error");
             }
         }
 
