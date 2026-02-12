@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Institucional - Educación Física GNA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+    <header class="header-gna shadow-lg">
+        <div class="flex items-center justify-center gap-4">
+            <div class="logo-circular">
+                <img src="logo.jpeg" alt="logo">
+            </div>
+            <h1 class="text-xl md:text-2xl font-bold uppercase tracking-widest text-white">
+                Educación Física GNA
+            </h1>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md border-t-4 border-green-800">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-green-900 uppercase">Bienvenido</h2>
+                <p class="text-gray-500 text-sm">Ingrese sus credenciales para continuar</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">Email</label>
+                    <input type="email" id="userEmail" class="input-field mt-1" placeholder="usuario@ejemplo.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">Contraseña</label>
+                    <input type="password" id="userPass" class="input-field mt-1" placeholder="••••••••">
+                </div>
+
+                <button onclick="login()" class="w-full bg-green-900 hover:bg-green-800 text-white font-bold py-3 rounded-lg transition-all shadow-md uppercase tracking-wider">
+                    Ingresar
+                </button>
+
+                <div class="flex flex-col gap-3 mt-6 text-center">
+                    <button onclick="openRegisterModal()" class="text-green-800 font-bold hover:underline text-sm uppercase">
+                        Crear nueva cuenta
+                    </button>
+                    <button onclick="openResetModal()" class="text-gray-500 hover:text-red-700 text-xs italic">
+                        ¿Olvidaste tu contraseña?
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalAviso" class="modal-overlay hidden" style="z-index: 4000;">
+        <div class="modal-content max-w-sm text-center">
+            <div id="avisoIcono" class="text-4xl mb-4"></div>
+            <h2 id="avisoTitulo" class="text-xl font-bold text-green-900 mb-2 uppercase text-center"></h2>
+            <p id="avisoTexto" class="text-gray-600 mb-6"></p>
+            <button onclick="cerrarAviso()" class="w-full py-2 bg-green-900 text-white rounded-lg font-bold uppercase">Entendido</button>
+        </div>
+    </div>
+
+    <div id="modalReset" class="modal-overlay hidden" style="z-index: 3000;">
+        <div class="modal-content max-w-sm">
+            <button onclick="closeResetModal()" class="close-x">&times;</button>
+            <h2 class="text-xl font-bold text-green-900 mb-4 border-b-2 border-yellow-500 uppercase text-center">Recuperar Acceso</h2>
+            <p class="text-sm text-gray-600 mb-4">Ingrese su email registrado para recibir el enlace de restablecimiento:</p>
+            <input type="email" id="resetEmailInput" class="input-field mb-4" placeholder="correo@ejemplo.com">
+            <div class="flex gap-2">
+                <button onclick="closeResetModal()" class="flex-1 py-2 bg-gray-300 rounded-lg font-bold text-xs uppercase">Cancelar</button>
+                <button onclick="enviarEnlaceRecuperacion()" class="flex-1 py-2 bg-green-900 text-white rounded-lg font-bold text-xs uppercase">Enviar Enlace</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalRegistro" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-content max-w-lg">
+            <button onclick="closeRegisterModal()" class="close-x">&times;</button>
+            <h2 class="text-xl font-bold text-green-900 mb-6 border-b-2 border-yellow-500 pb-2 uppercase text-center">Registro de Personal</h2>
+            
+            <form id="formRegistro" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold uppercase">Nombre y Apellido</label>
+                    <input type="text" id="regNombre" class="input-field" placeholder="Nombre completo">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold uppercase">Unidad de Destino</label>
+                    <select id="regUnidad" class="input-field">
+                        <option value="">Seleccione Unidad...</option>
+                        <option>Agrupación XX "Córdoba"</option>
+                        <option>Escuadrón 65 "Córdoba"</option>
+                        <option>Escuadrón Seguridad Vial "Santa Catalina"</option>
+                        <option>Escuadrón Seguridad Vial "Villa María"</option>
+                        <option>Escuadrón 64 "Recreo" (Sección Córdoba)</option>
+                        <option>Unidad de Procedimientos Judiciales "Córdoba"</option>
+                        <option>Destacamento Móvil 3 "Jesús María"</option>
+                        <option>Escuadrón Núcleo "Jesús María"</option>
+                        <option>Escuela de Suboficiales "Cabo R. R. Cuello"</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase">Teléfono Personal</label>
+                    <input type="tel" id="regTel" class="input-field" placeholder="Ej: 351xxxxxxx">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase">Email Personal</label>
+                    <input type="email" id="regEmail" class="input-field" placeholder="correo@ejemplo.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase">M.I.</label>
+                    <input type="password" id="regMI" class="input-field" placeholder="Clave MI">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase">C.E.</label>
+                    <input type="password" id="regCE" class="input-field" placeholder="Clave CE">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase">Contraseña</label>
+                    <input type="password" id="regPass" class="input-field" placeholder="Mínimo 6 caracteres">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase">Confirmar Contraseña</label>
+                    <input type="password" id="regPassConfirm" class="input-field" placeholder="Repita contraseña">
+                </div>
+
+                <div class="md:col-span-2 mt-4">
+                    <button type="button" onclick="registrarUsuario()" class="w-full bg-green-900 text-white font-bold py-3 rounded-lg hover:bg-green-800 shadow-lg transition-colors uppercase tracking-widest">
+                        Finalizar Registro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de tu proyecto Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYcPfhz2NqVp9xQfPnXYdB6MOv6kPLpL4",
+            authDomain: "planillaedf.firebaseapp.com",
+            projectId: "planillaedf",
+            storageBucket: "planillaedf.firebasestorage.app",
+            messagingSenderId: "476438611120",
+            appId: "1:476438611120:web:ecd1ad3d4abc27c7f56775"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // LÓGICA DE MODALES DE NOTIFICACIÓN
+        function mostrarMensaje(titulo, texto, tipo = 'info') {
+            const modal = document.getElementById('modalAviso');
+            const icono = document.getElementById('avisoIcono');
+            document.getElementById('avisoTitulo').innerText = titulo;
+            document.getElementById('avisoTexto').innerText = texto;
+            icono.innerText = (tipo === 'error') ? '⚠️' : (tipo === 'success') ? '✅' : 'ℹ️';
+            modal.classList.remove('hidden');
+        }
+
+        function cerrarAviso() { 
+            document.getElementById('modalAviso').classList.add('hidden'); 
+        }
+
+        // LÓGICA DE LOGIN
+        function login() {
+            const email = document.getElementById('userEmail').value;
+            const pass = document.getElementById('userPass').value;
+
+            if(!email || !pass) return mostrarMensaje("Atención", "Por favor complete email y contraseña.", "error");
+
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(() => {
+                    // Redirección al éxito
+                    window.location.href = "https://edfgna.netlify.app";
+                })
+                .catch((error) => {
+                    mostrarMensaje("Acceso Denegado", "Las credenciales no son válidas.", "error");
+                    console.error("Error login:", error.code);
+                });
+        }
+
+        // LÓGICA DE REGISTRO
+        async function registrarUsuario() {
+            const campos = {
+                nombre: document.getElementById('regNombre').value,
+                unidad: document.getElementById('regUnidad').value,
+                tel: document.getElementById('regTel').value,
+                email: document.getElementById('regEmail').value,
+                mi: document.getElementById('regMI').value,
+                ce: document.getElementById('regCE').value,
+                pass: document.getElementById('regPass').value,
+                confirm: document.getElementById('regPassConfirm').value
+            };
+
+            // Validaciones
+            if(Object.values(campos).some(v => v === "")) return mostrarMensaje("Validación", "Todos los campos son obligatorios.", "error");
+            if(campos.pass.length < 6) return mostrarMensaje("Seguridad", "La contraseña debe tener al menos 6 caracteres.", "error");
+            if(campos.pass !== campos.confirm) return mostrarMensaje("Error", "Las contraseñas no coinciden.", "error");
+
+            try {
+                // Crear en Firebase Auth
+                const userCredential = await auth.createUserWithEmailAndPassword(campos.email, campos.pass);
+                const user = userCredential.user;
+
+                // Guardar perfil en Firestore
+                await db.collection("usuarios").doc(user.uid).set({
+                    nombre: campos.nombre,
+                    unidad: campos.unidad,
+                    telefono: campos.tel,
+                    email: campos.email,
+                    mi: campos.mi,
+                    ce: campos.ce,
+                    rol: "usuario",
+                    fechaAlta: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                closeRegisterModal();
+                mostrarMensaje("Registro Exitoso", "Su cuenta ha sido creada. Ya puede iniciar sesión.", "success");
+            } catch (error) {
+                let msg = "No se pudo crear la cuenta.";
+                if(error.code === 'auth/email-already-in-use') msg = "Este email ya está registrado.";
+                mostrarMensaje("Error de Registro", msg, "error");
+            }
+        }
+
+        // RECUPERACIÓN DE CONTRASEÑA
+        function openResetModal() { document.getElementById('modalReset').classList.remove('hidden'); }
+        function closeResetModal() { document.getElementById('modalReset').classList.add('hidden'); }
+
+        function enviarEnlaceRecuperacion() {
+            const email = document.getElementById('resetEmailInput').value;
+            if (!email) return mostrarMensaje("Validación", "Ingrese su email.", "error");
+
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    closeResetModal();
+                    mostrarMensaje("Correo Enviado", "Revise su bandeja de entrada (y spam) para restablecer su clave.", "success");
+                })
+                .catch(() => {
+                    mostrarMensaje("Error", "No se encontró un usuario con ese correo.", "error");
+                });
+        }
+
+        // CONTROL DE MODAL REGISTRO
+        function openRegisterModal() { document.getElementById('modalRegistro').classList.remove('hidden'); }
+        function closeRegisterModal() { document.getElementById('modalRegistro').classList.add('hidden'); }
+    </script>
+</body>
+</html>
